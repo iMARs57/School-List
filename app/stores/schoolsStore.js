@@ -1,45 +1,54 @@
 var dispatcher = require('../dispatcher');
+var schoolService = require("../services/schoolService");
 
 function SchoolStore(){
     var listeners = [];
-    var schools = [
-        {   name: "Lovedale",
-            tagline: "A wonderful school"
-        },
-        {
-            name: "Bishop",
-            tagline: "An awesome school"
-        },
-        {
-            name: "Daffodils",
-            tagline: "An excellent school"
-        }
-    ];
-    function getSchools(){
-        return schools;
-    }
+    // var schools = [
+    //     {   name: "Lovedale",
+    //         tagline: "A wonderful school"
+    //     },
+    //     {
+    //         name: "Bishop",
+    //         tagline: "An awesome school"
+    //     },
+    //     {
+    //         name: "Daffodils",
+    //         tagline: "An excellent school"
+    //     }
+    // ];
     function onChange(listener){
+        getSchools(listener);
         listeners.push(listener);
     }
+
+    function getSchools(cb){
+        schoolService.getSchools().then(function(res){
+            cb(res);
+        });
+    }
+
     function addSchool(school){
-        schools.push(school);
-        triggerListeners();
+        schoolService.addSchool(school).then(function (res) {
+            console.log(res);
+            triggerListeners();
+        });
     }
+
     function deleteSchool(school){
-        var _index;
-        schools.map(function(s, index){
-            if(s.name === school.name){
-                _index = index;
-            }
+        schoolService.deleteSchool(school).then(function (res) {
+            console.log(res);
+            triggerListeners();
         });
-        schools.splice(_index, 1);
-        triggerListeners();
     }
+
     function triggerListeners(){
-        listeners.forEach(function(listener){
-            listener(schools);
+        getSchools(function(res){
+            listeners.forEach(function(listener){
+                listener(res);
+            });
         });
     }
+
     dispatcher.register(function(payload){
         var split = payload.type.split(":");
         if (split[0] === "school") {
@@ -53,8 +62,8 @@ function SchoolStore(){
             }
         }
     });
+
     return {
-        getSchools: getSchools,
         onChange: onChange
     }
 }
